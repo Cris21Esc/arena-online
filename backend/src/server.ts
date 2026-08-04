@@ -18,6 +18,7 @@ const io = new Server(server, {
 type Player = {
   socketId: string;
   playerName: string;
+  ready: boolean;
 };
 
 const rooms = new Map<string, Player[]>();
@@ -73,7 +74,8 @@ io.on('connection', (socket) => {
 
     room.push({
       socketId: socket.id,
-      playerName
+      playerName,
+      ready: false
     });
 
     emitRooms();
@@ -141,6 +143,36 @@ io.on('connection', (socket) => {
     );
 
   });
+
+  socket.on('toggle-ready', () => {
+
+      const roomId = socket.data.roomId;
+
+      if (!roomId) return;
+
+      const room = rooms.get(roomId);
+
+      if (!room) return;
+
+      const player = room.find(
+        user => user.socketId === socket.id
+      );
+
+      if (!player) return;
+
+      player.ready = !player.ready;
+
+      console.log(
+        `${player.playerName} ready: ${player.ready}`
+      );
+
+      io.to(roomId).emit(
+        'room-state',
+        room
+      );
+
+    }
+  );
 
 });
 

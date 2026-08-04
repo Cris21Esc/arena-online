@@ -6,13 +6,26 @@
 
     <h1>Socket.IO Test</h1>
 
+    <label>
+        <input type="checkbox" id="ready" onchange="toggleReady()">
+        Estoy listo
+    </label>
+
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
     <script>
 
+        function toggleReady() {
+
+            socket.emit(
+                'toggle-ready'
+            );
+
+        }
+
         const playerName =
-                prompt('Nombre de jugador')
-                || 'Jugador';
+            prompt('Nombre de jugador')
+            || 'Jugador';
 
         const socket = io('http://localhost:3000');
 
@@ -50,15 +63,21 @@
 
         });
 
-        socket.on(
-            'rooms-updated',
-            (rooms) => {
-                console.log(
-                    'Salas:',
-                    rooms
-                );
-            }
-        );
+        socket.on('rooms-updated', (rooms) => {
+            console.log(
+                'Salas:',
+                rooms
+            );
+        });
+
+        socket.on('room-state', (players) => {
+
+            console.log(
+                'Estado sala:',
+                players
+            );
+
+        });
 
     </script>
 
