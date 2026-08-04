@@ -10,6 +10,10 @@
 
     <script>
 
+        const playerName =
+                prompt('Nombre de jugador')
+                || 'Jugador';
+
         const socket = io('http://localhost:3000');
 
         socket.on('connect', () => {
@@ -21,7 +25,10 @@
 
             socket.emit(
                 'join-room',
-                'arena-1'
+                {
+                    roomId: 'arena-1',
+                    playerName
+                }
             );
 
         });

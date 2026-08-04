@@ -15,14 +15,23 @@ const io = new Server(server, {
   }
 });
 
-const rooms = new Map<string, Set<string>>();
+type Player = {
+  socketId: string;
+  playerName: string;
+};
+
+const rooms = new Map<string, Player[]>();
 
 function getRoomsState() {
 
   return Array.from(rooms.entries()).map(
     ([roomId, users]) => ({
       roomId,
-      players: users.size
+      players: users.length,
+      full: users.length >= 2,
+      users: users.map(
+        user => user.playerName
+      )
     })
   );
 
@@ -43,18 +52,16 @@ app.get('/', (_req, res) => {
 
 io.on('connection', (socket) => {
 
-  console.log('User connected:', socket.id);
-
-  socket.on('join-room', (roomId) => {
+  socket.on('join-room', ({roomId,playerName}) => {
 
     let room = rooms.get(roomId);
 
     if (!room) {
-      room = new Set();
+      room = [];
       rooms.set(roomId, room);
     }
 
-    if (room.size >= 2) {
+    if (room.length >= 2) {
 
       socket.emit(
         'room-full',
@@ -64,7 +71,10 @@ io.on('connection', (socket) => {
       return;
     }
 
-    room.add(socket.id);
+    room.push({
+      socketId: socket.id,
+      playerName
+    });
 
     emitRooms();
 
@@ -72,13 +82,15 @@ io.on('connection', (socket) => {
 
     socket.data.roomId = roomId;
 
+    socket.data.playerName = playerName;
+
     socket.emit(
       'room-joined',
       roomId
     );
 
     console.log(
-      `${socket.id} se unió a sala ${roomId}`
+      `${playerName} se unió a sala ${roomId}`
     );
 
   });
@@ -86,6 +98,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
 
     const roomId = socket.data.roomId;
+    const playerName = socket.data.playerName;
 
     if (roomId) {
       
@@ -93,15 +106,21 @@ io.on('connection', (socket) => {
 
       if (room) {
 
-        room.delete(socket.id);
+        const index = room.findIndex(
+          user => user.socketId === socket.id
+        );
+
+        if (index !== -1) {
+          room.splice(index, 1);
+        }
 
         emitRooms();
 
         console.log(
-          `${socket.id} abandonó sala ${roomId}`
+          `${playerName} (${socket.id}) abandonó sala ${roomId}`
         );
 
-        if (room.size === 0) {
+        if (room.length === 0) {
 
           rooms.delete(roomId);
 
@@ -117,8 +136,8 @@ io.on('connection', (socket) => {
     }
 
     console.log(
-      'User disconnected:',
-      socket.id
+      'Usuario desconectado:',
+      playerName
     );
 
   });
