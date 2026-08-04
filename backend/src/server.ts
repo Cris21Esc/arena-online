@@ -78,9 +78,14 @@ io.on('connection', (socket) => {
       ready: false
     });
 
-    emitRooms();
-
     socket.join(roomId);
+
+    io.to(roomId).emit(
+      'room-state',
+      room
+    );
+
+    emitRooms();
 
     socket.data.roomId = roomId;
 
@@ -112,8 +117,13 @@ io.on('connection', (socket) => {
           user => user.socketId === socket.id
         );
 
-        if (index !== -1) {
+        if (index !== -1) {          
           room.splice(index, 1);
+
+          io.to(roomId).emit(
+            'room-state',
+            room
+          );
         }
 
         emitRooms();
@@ -170,6 +180,17 @@ io.on('connection', (socket) => {
         'room-state',
         room
       );
+
+      if (
+        room.length === 2 &&
+        room.every(player => player.ready)
+      ) {
+
+        io.to(roomId).emit(
+          'game-start'
+        );
+
+      }
 
     }
   );

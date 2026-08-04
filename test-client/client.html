@@ -1,19 +1,93 @@
 <head>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: white;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            height: 100vh;
+        }
+
+        .container {
+            width: 500px;
+        }
+
+        .room-card {
+
+            background: #2a2a40;
+
+            padding: 24px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 0 20px rgba(0, 0, 0, .4);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .ready-container {
+            display: block;
+            margin-top: 20px;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
     <title>Socket Test</title>
 </head>
 
 <body>
 
-    <h1>Socket.IO Test</h1>
+    <div class="container">
 
-    <label>
-        <input type="checkbox" id="ready" onchange="toggleReady()">
-        Estoy listo
-    </label>
+        <h1>Arena Online</h1>
 
+        <div class="room-card">
+
+            <h2>Sala arena-1</h2>
+
+            <ul id="players-list">
+            </ul>
+
+            <label class="ready-container">
+                <input type="checkbox" id="ready" onchange="toggleReady()">
+                Estoy listo
+            </label>
+
+            <p id="status">
+                Esperando jugadores...
+            </p>
+
+        </div>
+
+    </div>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
     <script>
+
+        const playersList = document.getElementById('players-list');
+
+        const status = document.getElementById('status');
 
         function toggleReady() {
 
@@ -72,10 +146,47 @@
 
         socket.on('room-state', (players) => {
 
-            console.log(
-                'Estado sala:',
-                players
-            );
+            playersList.innerHTML = '';
+
+            players.forEach(player => {
+
+                const li =
+                    document.createElement('li');
+
+                li.textContent =
+                    `${player.playerName} ${player.ready ? '✅' : '❌'}`;
+
+                playersList.appendChild(li);
+
+            });
+
+            if (players.length < 2) {
+
+                status.textContent =
+                    'Esperando segundo jugador...';
+
+            } else {
+
+                status.textContent =
+                    'Esperando que ambos estén listos...';
+
+            }
+
+        });
+
+        socket.on('game-start', () => {
+
+            const roomCard = document.querySelector('.room-card');
+
+            roomCard.innerHTML = `
+                <h2>🚀 Partida iniciada</h2>
+
+                <p>Turno 1</p>
+
+                <button>
+                    Finalizar turno
+                </button>
+            `;
 
         });
 
