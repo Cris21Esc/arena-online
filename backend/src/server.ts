@@ -7,6 +7,8 @@ const app = express();
 
 app.use(cors());
 
+app.use(express.static('public'));
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -46,10 +48,6 @@ function emitRooms() {
   );
 
 }
-
-app.get('/', (_req, res) => {
-  res.send('Arena Online Backend Running');
-});
 
 io.on('connection', (socket) => {
 
