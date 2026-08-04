@@ -3,11 +3,8 @@
 </head>
 
 <body>
-    <h1>Socket.IO Test</h1>
 
-    <button onclick="sendMessage()">
-        Enviar mensaje
-    </button>
+    <h1>Socket.IO Test</h1>
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
@@ -17,36 +14,35 @@
 
         socket.on('connect', () => {
 
-            console.log('Connected:', socket.id);
+            console.log(
+                'Connected:',
+                socket.id
+            );
 
             socket.emit(
-                'ping-server',
-                'Hola servidor'
+                'join-room',
+                'arena-1'
             );
 
         });
 
-        socket.on('pong-client', (message) => {
-            console.log(message);
-        });
-
-        socket.on('chat-message', (message) => {
+        socket.on('room-joined', (roomId) => {
 
             console.log(
-                'Mensaje recibido:',
-                message
+                'Entraste en sala:',
+                roomId
             );
 
         });
 
-        function sendMessage() {
+        socket.on('room-full', (roomId) => {
 
-            socket.emit(
-                'chat-message',
-                `Hola desde ${socket.id}`
+            console.log(
+                `Sala ${roomId} llena`
             );
 
-        }
+        });
 
     </script>
+
 </body>

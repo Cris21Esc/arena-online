@@ -15,41 +15,59 @@ const io = new Server(server, {
   }
 });
 
+const rooms = new Map<string, Set<string>>();
+
 app.get('/', (_req, res) => {
   res.send('Arena Online Backend Running');
 });
 
-//Connect
 io.on('connection', (socket) => {
 
   console.log('User connected:', socket.id);
 
-  socket.on('ping-server',(message) => {
+  socket.on('join-room', (roomId) => {
 
-    console.log('Mensaje recibido:', message);
+    let room = rooms.get(roomId);
+
+    if (!room) {
+      room = new Set();
+      rooms.set(roomId, room);
+    }
+
+    if (room.size >= 2) {
+
+      socket.emit(
+        'room-full',
+        roomId
+      );
+
+      return;
+    }
+
+    room.add(socket.id);
+
+    socket.join(roomId);
 
     socket.emit(
-      'pong-client',
-      'Hola cliente'
+      'room-joined',
+      roomId
+    );
+
+    console.log(
+      `${socket.id} se unió a sala ${roomId}`
     );
 
   });
 
-  socket.on('chat-message', (message) => {
-
-    console.log('Chat:', message);
-
-    io.emit(
-      'chat-message',
-      message
-    );
-
-  });
-
-  //Disconnect
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+
+    console.log(
+      'User disconnected:',
+      socket.id
+    );
+
   });
+
 });
 
 const PORT = 3000;
