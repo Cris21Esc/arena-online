@@ -1,0 +1,52 @@
+<head>
+    <title>Socket Test</title>
+</head>
+
+<body>
+    <h1>Socket.IO Test</h1>
+
+    <button onclick="sendMessage()">
+        Enviar mensaje
+    </button>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+    <script>
+
+        const socket = io('http://localhost:3000');
+
+        socket.on('connect', () => {
+
+            console.log('Connected:', socket.id);
+
+            socket.emit(
+                'ping-server',
+                'Hola servidor'
+            );
+
+        });
+
+        socket.on('pong-client', (message) => {
+            console.log(message);
+        });
+
+        socket.on('chat-message', (message) => {
+
+            console.log(
+                'Mensaje recibido:',
+                message
+            );
+
+        });
+
+        function sendMessage() {
+
+            socket.emit(
+                'chat-message',
+                `Hola desde ${socket.id}`
+            );
+
+        }
+
+    </script>
+</body>
