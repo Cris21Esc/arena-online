@@ -17,6 +17,26 @@ const io = new Server(server, {
 
 const rooms = new Map<string, Set<string>>();
 
+function getRoomsState() {
+
+  return Array.from(rooms.entries()).map(
+    ([roomId, users]) => ({
+      roomId,
+      players: users.size
+    })
+  );
+
+}
+
+function emitRooms() {
+
+  io.emit(
+    'rooms-updated',
+    getRoomsState()
+  );
+
+}
+
 app.get('/', (_req, res) => {
   res.send('Arena Online Backend Running');
 });
@@ -46,6 +66,8 @@ io.on('connection', (socket) => {
 
     room.add(socket.id);
 
+    emitRooms();
+
     socket.join(roomId);
 
     socket.data.roomId = roomId;
@@ -73,6 +95,8 @@ io.on('connection', (socket) => {
 
         room.delete(socket.id);
 
+        emitRooms();
+
         console.log(
           `${socket.id} abandonó sala ${roomId}`
         );
@@ -80,6 +104,8 @@ io.on('connection', (socket) => {
         if (room.size === 0) {
 
           rooms.delete(roomId);
+
+          emitRooms();
 
           console.log(
             `Sala ${roomId} eliminada`

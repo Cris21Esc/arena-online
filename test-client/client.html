@@ -43,6 +43,16 @@
 
         });
 
+        socket.on(
+            'rooms-updated',
+            (rooms) => {
+                console.log(
+                    'Salas:',
+                    rooms
+                );
+            }
+        );
+
     </script>
 
 </body>
