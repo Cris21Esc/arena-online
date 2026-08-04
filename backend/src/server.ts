@@ -48,6 +48,8 @@ io.on('connection', (socket) => {
 
     socket.join(roomId);
 
+    socket.data.roomId = roomId;
+
     socket.emit(
       'room-joined',
       roomId
@@ -60,6 +62,33 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+
+    const roomId = socket.data.roomId;
+
+    if (roomId) {
+      
+      const room = rooms.get(roomId);
+
+      if (room) {
+
+        room.delete(socket.id);
+
+        console.log(
+          `${socket.id} abandonó sala ${roomId}`
+        );
+
+        if (room.size === 0) {
+
+          rooms.delete(roomId);
+
+          console.log(
+            `Sala ${roomId} eliminada`
+          );
+        }
+
+      }
+      
+    }
 
     console.log(
       'User disconnected:',
