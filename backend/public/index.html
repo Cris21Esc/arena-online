@@ -144,11 +144,11 @@
             );
         });
 
-        socket.on('room-state', (players) => {
+        socket.on('room-state', (room) => {
 
             playersList.innerHTML = '';
 
-            players.forEach(player => {
+            room.players.forEach(player => {
 
                 const li =
                     document.createElement('li');
@@ -160,7 +160,7 @@
 
             });
 
-            if (players.length < 2) {
+            if (room.players.length < 2) {
 
                 status.textContent =
                     'Esperando segundo jugador...';

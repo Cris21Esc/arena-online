@@ -21,18 +21,25 @@ type Player = {
   socketId: string;
   playerName: string;
   ready: boolean;
+  hp: number;
 };
 
-const rooms = new Map<string, Player[]>();
+type Room = {
+  players: Player[];
+  currentTurn: string | null;
+  gameStarted: boolean;
+}
+
+const rooms = new Map<string, Room>();
 
 function getRoomsState() {
 
   return Array.from(rooms.entries()).map(
-    ([roomId, users]) => ({
+    ([roomId, room]) => ({
       roomId,
-      players: users.length,
-      full: users.length >= 2,
-      users: users.map(
+      players: room.players.length,
+      full: room.players.length >= 2,
+      users: room.players.map(
         user => user.playerName
       )
     })
@@ -56,11 +63,15 @@ io.on('connection', (socket) => {
     let room = rooms.get(roomId);
 
     if (!room) {
-      room = [];
+      room = {
+        players: [],
+        currentTurn: null,
+        gameStarted: false
+      };
       rooms.set(roomId, room);
     }
 
-    if (room.length >= 2) {
+    if (room.players.length >= 2) {
 
       socket.emit(
         'room-full',
@@ -70,10 +81,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    room.push({
+    room.players.push({
       socketId: socket.id,
       playerName,
-      ready: false
+      ready: false,
+      hp: 5
     });
 
     socket.join(roomId);
@@ -111,12 +123,12 @@ io.on('connection', (socket) => {
 
       if (room) {
 
-        const index = room.findIndex(
+        const index = room.players.findIndex(
           user => user.socketId === socket.id
         );
 
         if (index !== -1) {          
-          room.splice(index, 1);
+          room.players.splice(index, 1);
 
           io.to(roomId).emit(
             'room-state',
@@ -130,7 +142,7 @@ io.on('connection', (socket) => {
           `${playerName} (${socket.id}) abandonó sala ${roomId}`
         );
 
-        if (room.length === 0) {
+        if (room.players.length === 0) {
 
           rooms.delete(roomId);
 
@@ -162,7 +174,7 @@ io.on('connection', (socket) => {
 
       if (!room) return;
 
-      const player = room.find(
+      const player = room.players.find(
         user => user.socketId === socket.id
       );
 
@@ -180,9 +192,18 @@ io.on('connection', (socket) => {
       );
 
       if (
-        room.length === 2 &&
-        room.every(player => player.ready)
+        room.players.length === 2 &&
+        room.players.every(player => player.ready)
       ) {
+
+        room.gameStarted = true;
+
+        room.currentTurn = room.players[0]!.socketId;
+
+        io.to(roomId).emit(
+          'game-state',
+          room
+        );
 
         io.to(roomId).emit(
           'game-start'
